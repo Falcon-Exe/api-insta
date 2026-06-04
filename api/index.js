@@ -6,7 +6,18 @@ const instagramService = require('../src/services/instagram');
 const app = express();
 
 // Security and middleware
-app.use(cors()); // Configure this more strictly for production
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : [];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (same origin), localhost (local dev), or explicitly allowed domains
+        if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
 app.use(express.json());
 
 // Basic rate limiting: max 100 requests per 15 minutes per IP
