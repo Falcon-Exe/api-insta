@@ -5,5 +5,11 @@
             "source": "/api/(.*)",
             "destination": "/api/index.js"
         }
+    ],
+    "crons": [
+        {
+            "path": "/api/instagram/refresh",
+            "schedule": "0 0 1 * *"
+        }
     ]
 }

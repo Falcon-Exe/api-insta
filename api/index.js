@@ -32,14 +32,18 @@ app.get('/api/instagram/posts', apiLimiter, async (req, res) => {
     }
 });
 
-// Token refresh endpoint (protected)
-app.post('/api/instagram/refresh', async (req, res) => {
+// Token refresh endpoint (protected) - Supports POST for manual, GET for Vercel Cron
+app.all('/api/instagram/refresh', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         const adminSecret = process.env.ADMIN_SECRET;
+        const cronSecret = process.env.CRON_SECRET;
 
-        // Basic protection check
-        if (!adminSecret || authHeader !== `Bearer ${adminSecret}`) {
+        // Basic protection check (allow either ADMIN_SECRET or Vercel's CRON_SECRET)
+        const isAuthorizedAdmin = adminSecret && authHeader === `Bearer ${adminSecret}`;
+        const isAuthorizedCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+        if (!isAuthorizedAdmin && !isAuthorizedCron) {
             return res.status(403).json({ error: 'Unauthorized.' });
         }
 
