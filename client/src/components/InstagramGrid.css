@@ -1,0 +1,197 @@
+/**
+ * InstagramGrid Base Styles - Dark Mode
+ */
+:root {
+  --ig-bg: #ffffff;
+  --ig-text: #111827;
+  --ig-card-bg: #f3f4f6;
+  --ig-radius: 12px;
+  --ig-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --ig-border: rgba(0, 0, 0, 0.1);
+  --ig-status-bg: rgba(0, 0, 0, 0.05);
+  --ig-skeleton-bg: #e5e7eb;
+  --ig-skeleton-shimmer: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ig-bg: #111111;
+    --ig-text: #f3f4f6;
+    --ig-card-bg: #1f2937;
+    --ig-border: rgba(255, 255, 255, 0.1);
+    --ig-status-bg: rgba(255, 255, 255, 0.05);
+    --ig-skeleton-bg: #374151;
+    --ig-skeleton-shimmer: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+  }
+}
+
+.ig-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: var(--ig-bg);
+  color: var(--ig-text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  border-radius: var(--ig-radius);
+}
+
+.ig-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--ig-border);
+  padding-bottom: 1rem;
+}
+
+.ig-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(to right, #f59e0b, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ig-status {
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--ig-status-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--ig-border);
+}
+
+.ig-loading, .ig-error, .ig-empty {
+  text-align: center;
+  padding: 4rem 0;
+  font-size: 1.125rem;
+  color: #9ca3af;
+}
+
+/* Skeleton Loader Styles */
+.ig-skeleton {
+  background-color: var(--ig-skeleton-bg);
+  position: relative;
+  overflow: hidden;
+  min-height: 300px; /* Give skeletons a height since images aren't loaded yet */
+}
+
+.ig-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: var(--ig-skeleton-shimmer);
+  animation: shimmer 2s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ig-error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--ig-radius);
+  margin-bottom: 2rem;
+}
+
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  align-items: start; /* Prevents stretching, maintains actual aspect ratio */
+}
+
+.ig-post-card {
+  display: block;
+  border-radius: var(--ig-radius);
+  overflow: hidden;
+  position: relative;
+  background-color: var(--ig-card-bg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  transform: translateY(0);
+  transition: var(--ig-transition);
+}
+
+.ig-post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+.ig-image-container {
+  width: 100%;
+  position: relative;
+}
+
+.ig-image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: var(--ig-transition);
+}
+
+.ig-post-card:hover .ig-image-container img {
+  transform: scale(1.05);
+}
+
+.ig-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: var(--ig-transition);
+  padding: 1rem;
+  text-align: center;
+}
+
+.ig-post-card:hover .ig-overlay {
+  opacity: 1;
+}
+
+.ig-icon {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid white;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+  margin-top: 1rem;
+}
+
+.ig-caption {
+  color: white;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .ig-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .ig-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+}
