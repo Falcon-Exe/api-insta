@@ -29,7 +29,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: var(--ig-bg);
+  background-color: transparent;
   color: var(--ig-text);
   font-family: 'Inter', -apple-system, sans-serif;
   border-radius: var(--ig-radius);
