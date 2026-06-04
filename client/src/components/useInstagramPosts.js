@@ -1,55 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 /**
  * Custom React hook for fetching Instagram posts from the backend API.
  * @param {number} limit - The maximum number of posts to fetch (default: 18).
  * @param {string} apiBaseUrl - The base URL of the API.
- * @returns {Object} { data, loading, error, source }
+ * @returns {Object} { data, loading, loadingNextPage, error, source, hasNextPage, fetchNextPage }
  */
-export function useInstagramPosts(limit = 18, apiBaseUrl = 'http://localhost:3000') {
+export function useInstagramPosts(limit = 18, apiBaseUrl = 'http://localhost:8080') {
     const [data, setData] = useState([]);
     const [source, setSource] = useState('live');
     const [loading, setLoading] = useState(true);
+    const [loadingNextPage, setLoadingNextPage] = useState(false);
     const [error, setError] = useState(null);
+    
+    // Pagination state
+    const [nextCursor, setNextCursor] = useState(null);
+    const [hasNextPage, setHasNextPage] = useState(false);
 
-    useEffect(() => {
-        let isMounted = true;
-
-        async function fetchPosts() {
-            try {
+    const fetchPosts = useCallback(async (after = null) => {
+        try {
+            if (after) {
+                setLoadingNextPage(true);
+            } else {
                 setLoading(true);
-                setError(null);
+            }
+            setError(null);
 
-                const response = await fetch(`${apiBaseUrl}/api/instagram/posts?limit=${limit}`);
+            let url = `${apiBaseUrl}/api/instagram/posts?limit=${limit}`;
+            if (after) url += `&after=${after}`;
 
-                if (!response.ok) {
-                    throw new Error(`Error: ${response.status} ${response.statusText}`);
-                }
+            const response = await fetch(url);
 
-                const result = await response.json();
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status} ${response.statusText}`);
+            }
 
-                if (isMounted) {
-                    setData(result.posts || []);
-                    setSource(result.source || 'live');
-                }
-            } catch (err) {
-                if (isMounted) {
-                    setError(err.message);
-                    // Don't override data here to allow fallback display if we already had data
-                }
-            } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+            const result = await response.json();
+
+            if (after) {
+                setData(prev => [...prev, ...(result.posts || [])]);
+            } else {
+                setData(result.posts || []);
+            }
+            
+            setSource(result.source || 'live');
+            
+            // Update pagination state
+            if (result.paging && result.paging.cursors && result.paging.cursors.after) {
+                setNextCursor(result.paging.cursors.after);
+                setHasNextPage(!!result.paging.next);
+            } else {
+                setNextCursor(null);
+                setHasNextPage(false);
+            }
+
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            if (after) {
+                setLoadingNextPage(false);
+            } else {
+                setLoading(false);
             }
         }
-
-        fetchPosts();
-
-        return () => {
-            isMounted = false;
-        };
     }, [limit, apiBaseUrl]);
 
-    return { data, loading, error, source };
+    // Initial fetch
+    useEffect(() => {
+        fetchPosts();
+    }, [fetchPosts]);
+
+    const fetchNextPage = useCallback(() => {
+        if (hasNextPage && nextCursor && !loadingNextPage) {
+            fetchPosts(nextCursor);
+        }
+    }, [fetchPosts, hasNextPage, nextCursor, loadingNextPage]);
+
+    return { data, loading, loadingNextPage, error, source, hasNextPage, fetchNextPage };
 }

@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useInstagramPosts } from './useInstagramPosts';
-import './InstagramGrid.css'; // Ensure you import the styles
+import InstagramCard from './InstagramCard';
+import Lightbox from './Lightbox';
+import './InstagramGrid.css';
 
 /**
  * InstagramGrid component displays a dark-mode responsive grid of Instagram posts.
- * Utilizes the useInstagramPosts hook.
+ * Utilizes the useInstagramPosts hook with pagination support.
  */
 export default function InstagramGrid({ limit = 9, apiBaseUrl }) {
-    const { data: posts, loading, error, source } = useInstagramPosts(limit, apiBaseUrl);
+    const { data: posts, loading, loadingNextPage, error, source, hasNextPage, fetchNextPage } = useInstagramPosts(limit, apiBaseUrl);
+    
+    // Lightbox state
+    const [selectedPost, setSelectedPost] = useState(null);
+    const [initialImageIndex, setInitialImageIndex] = useState(0);
+
+    const handleCardClick = (post, imageIndex) => {
+        setSelectedPost(post);
+        setInitialImageIndex(imageIndex);
+    };
 
     const getSourceBadgeColor = (sourceStr) => {
         switch (sourceStr) {
@@ -40,30 +51,41 @@ export default function InstagramGrid({ limit = 9, apiBaseUrl }) {
                     ))}
                 </div>
             ) : (
-                <div className="ig-grid">
-                    {posts.map((post) => (
-                        <a
-                            key={post.id}
-                            href={post.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ig-post-card"
-                            aria-label={`View Instagram post: ${post.alt || 'Open link'}`}
-                        >
-                            <div className="ig-image-container">
-                                <img src={post.url} alt={post.alt || 'Instagram content'} loading="lazy" />
-                                <div className="ig-overlay">
-                                    {post.alt && <p className="ig-caption">{post.alt}</p>}
-                                    <span className="ig-icon" aria-hidden="true">View on Instagram</span>
-                                </div>
-                            </div>
-                        </a>
-                    ))}
-                </div>
+                <>
+                    <div className="ig-grid">
+                        {posts.map((post) => (
+                            <InstagramCard 
+                                key={post.id} 
+                                post={post} 
+                                onClick={handleCardClick} 
+                            />
+                        ))}
+                    </div>
+                    
+                    {hasNextPage && (
+                        <div className="ig-load-more-container">
+                            <button 
+                                className="ig-load-more-btn" 
+                                onClick={fetchNextPage}
+                                disabled={loadingNextPage}
+                            >
+                                {loadingNextPage ? 'Loading...' : 'Load More'}
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             {!loading && !error && posts.length === 0 && (
                 <div className="ig-empty">No posts available at the moment.</div>
+            )}
+
+            {selectedPost && (
+                <Lightbox 
+                    post={selectedPost} 
+                    initialIndex={initialImageIndex}
+                    onClose={() => setSelectedPost(null)} 
+                />
             )}
         </div>
     );

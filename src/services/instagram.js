@@ -73,15 +73,24 @@ async function refreshToken() {
 /**
  * Fetches Instagram posts using either the Live API, In-Memory Cache, or Fallback File.
  * @param {number} limit - Maximum number of posts to return.
- * @returns {Promise<{ posts: Object[], source: string }>}
+ * @param {string|null} after - Cursor for pagination.
+ * @returns {Promise<{ posts: Object[], paging: Object, source: string }>}
  */
-async function getPosts(limit = 18) {
+async function getPosts(limit = 18, after = null) {
     const now = Date.now();
+    const cacheKey = after || 'first_page';
 
     // 1. Check in-memory cache
-    if (cache.data && cache.timestamp && (now - cache.timestamp) < CACHE_TTL_MS) {
+    if (!cache[cacheKey]) {
+        cache[cacheKey] = { data: null, timestamp: null, paging: null };
+    }
+    
+    const pageCache = cache[cacheKey];
+
+    if (pageCache.data && pageCache.timestamp && (now - pageCache.timestamp) < CACHE_TTL_MS) {
         return {
-            posts: cache.data.slice(0, limit),
+            posts: pageCache.data.slice(0, limit),
+            paging: pageCache.paging,
             source: 'cache'
         };
     }
@@ -89,28 +98,54 @@ async function getPosts(limit = 18) {
     // 2. Fetch from Live API
     if (validateEnv()) {
         try {
-            const url = `https://graph.instagram.com/${IG_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url&access_token=${IG_TOKEN}`;
-            const response = await axios.get(url);
+            let url = `https://graph.instagram.com/${IG_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,children{media_url,media_type,thumbnail_url}&access_token=${IG_TOKEN}&limit=${limit}`;
+            if (after) {
+                url += `&after=${after}`;
+            }
 
+            const response = await axios.get(url);
             const rawPosts = response.data.data;
+            const pagingInfo = response.data.paging || null;
 
             // Transform data securely
-            const transformedPosts = rawPosts.map(post => ({
-                id: post.id,
-                url: post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url,
-                alt: post.caption || 'Instagram Post',
-                link: post.permalink
-            }));
+            const transformedPosts = rawPosts.map(post => {
+                const isVideo = post.media_type === 'VIDEO';
+                const hasChildren = post.media_type === 'CAROUSEL_ALBUM' && post.children && post.children.data;
+                
+                let children = [];
+                if (hasChildren) {
+                    children = post.children.data.map(child => ({
+                        id: child.id,
+                        media_type: child.media_type,
+                        url: child.media_type === 'VIDEO' ? child.thumbnail_url : child.media_url,
+                        videoUrl: child.media_type === 'VIDEO' ? child.media_url : null
+                    }));
+                }
+
+                return {
+                    id: post.id,
+                    media_type: post.media_type,
+                    url: isVideo ? post.thumbnail_url : post.media_url,
+                    videoUrl: isVideo ? post.media_url : null,
+                    alt: post.caption || 'Instagram Post',
+                    link: post.permalink,
+                    children: children
+                };
+            });
 
             // Update Cache
-            cache.data = transformedPosts;
-            cache.timestamp = now;
+            pageCache.data = transformedPosts;
+            pageCache.timestamp = now;
+            pageCache.paging = pagingInfo;
 
-            // Update Fallback File Cache
-            saveFallbackCache(transformedPosts);
+            // Update Fallback File Cache (only for first page to be safe)
+            if (!after) {
+                saveFallbackCache({ posts: transformedPosts, paging: pagingInfo });
+            }
 
             return {
-                posts: transformedPosts.slice(0, limit),
+                posts: transformedPosts,
+                paging: pagingInfo,
                 source: 'live'
             };
         } catch (error) {
@@ -119,20 +154,24 @@ async function getPosts(limit = 18) {
     }
 
     // 3. Fallback to Local File Cache if Live API fails or no env setup
-    console.log('Attempting to serve posts from fallback cache...');
-    const fallbackData = readFallbackCache();
+    if (!after) {
+        console.log('Attempting to serve posts from fallback cache...');
+        const fallbackData = readFallbackCache();
 
-    if (fallbackData) {
-        return {
-            posts: fallbackData.slice(0, limit),
-            source: 'fallback'
-        };
+        if (fallbackData && fallbackData.posts) {
+            return {
+                posts: fallbackData.posts.slice(0, limit),
+                paging: fallbackData.paging || null,
+                source: 'fallback'
+            };
+        }
     }
 
     // 4. Return Empty Fallback if nothing is available
     console.error('No fallback data available.');
     return {
         posts: [],
+        paging: null,
         source: 'fallback' /* Still returning fallback state but with empty posts */
     };
 }

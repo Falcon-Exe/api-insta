@@ -20,7 +20,8 @@ const apiLimiter = rateLimit({
 app.get('/api/instagram/posts', apiLimiter, async (req, res) => {
     try {
         const limit = parseInt(req.query.limit, 10) || 18;
-        const result = await instagramService.getPosts(limit);
+        const after = req.query.after || null;
+        const result = await instagramService.getPosts(limit, after);
         
         // Add cache-control headers (60 seconds to match in-memory cache)
         res.set('Cache-Control', 'public, max-age=60');

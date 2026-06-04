@@ -195,3 +195,262 @@
     gap: 1rem;
   }
 }
+
+/* =========================================
+   InstagramCard: Carousel & Video Overlays
+   ========================================= */
+
+.ig-post-card {
+  cursor: pointer;
+}
+
+.ig-video-player {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.ig-carousel-indicator, .ig-video-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ig-carousel-controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  opacity: 1;
+  z-index: 10;
+}
+
+.ig-carousel-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: background 0.2s;
+}
+
+.ig-carousel-btn:hover {
+  background: white;
+}
+
+.ig-carousel-dots {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.ig-dot {
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.ig-dot.active {
+  background: white;
+}
+
+/* Hide the overlay caption when carousel controls are active */
+.ig-post-card:hover .ig-overlay {
+  opacity: 1;
+  pointer-events: none; /* Let clicks pass through to carousel buttons */
+}
+
+/* =========================================
+   Load More Button
+   ========================================= */
+
+.ig-load-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+.ig-load-more-btn {
+  background: linear-gradient(to right, #f59e0b, #ec4899);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.ig-load-more-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+}
+
+.ig-load-more-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   Lightbox Modal
+   ========================================= */
+
+.ig-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.ig-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 3rem;
+  cursor: pointer;
+  z-index: 10000;
+  transition: color 0.2s;
+}
+
+.ig-lightbox-close:hover {
+  color: #f59e0b;
+}
+
+.ig-lightbox-content {
+  display: flex;
+  max-width: 1200px;
+  width: 100%;
+  height: 85vh;
+  background: var(--ig-card-bg);
+  border-radius: var(--ig-radius);
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  flex-direction: row;
+}
+
+.ig-lightbox-media {
+  flex: 2;
+  background: black;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ig-lightbox-img, .ig-lightbox-video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.ig-lightbox-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.ig-lightbox-btn:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ig-lightbox-btn.prev {
+  left: 1rem;
+}
+
+.ig-lightbox-btn.next {
+  right: 1rem;
+}
+
+.ig-lightbox-sidebar {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--ig-border);
+  overflow-y: auto;
+  min-width: 300px;
+}
+
+.ig-lightbox-caption {
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  flex-grow: 1;
+}
+
+.ig-lightbox-link {
+  display: inline-block;
+  margin-top: 2rem;
+  text-align: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(to right, #f59e0b, #ec4899);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--ig-radius);
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.ig-lightbox-link:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .ig-lightbox-content {
+    flex-direction: column;
+    height: 90vh;
+  }
+  .ig-lightbox-media {
+    flex: 1;
+    min-height: 50vh;
+  }
+  .ig-lightbox-sidebar {
+    flex: none;
+    border-left: none;
+    border-top: 1px solid var(--ig-border);
+    max-height: 40vh;
+  }
+}
