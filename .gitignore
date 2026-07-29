@@ -132,5 +132,4 @@ dist
 # Vercel
 .vercel/
 
-# Fallback Cache
-fallback-cache.json
+
